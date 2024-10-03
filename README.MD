@@ -1,5 +1,9 @@
 # IANES - Sistema de Recomendação de Investimentos
 
+##
+Instruções para realizar o git:
+
+
 ## Integrantes do Grupo
 - Miguel
 - Isaac
