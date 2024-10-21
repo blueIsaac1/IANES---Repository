@@ -1,9 +1,9 @@
 import requests
-from bs4 import BeautifulSoup
+from bs4 import BeautifulSoup # biblioteca que permite analisar e extrair informações de paginas WEB
 import json
 import time
-from urllib.parse import urljoin, urlparse
-from concurrent.futures import ThreadPoolExecutor, as_completed
+from urllib.parse import urljoin, urlparse # biblioteca que permite manipular URLs
+from concurrent.futures import ThreadPoolExecutor, as_completed # biblioteca que permite fazer tarefas em paralelo ao mesmo tempo
 import os
 
 # Função para verificar se o conteúdo é relevante para "linhas de crédito"
