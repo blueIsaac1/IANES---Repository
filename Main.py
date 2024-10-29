@@ -179,7 +179,24 @@ def get_gemini_analysis_with_retry(content, user_inputs, max_retries=5, initial_
     for attempt in range(max_retries):
         try:
             model = genai.GenerativeModel("gemini-1.5-flash")
-            prompt = f"Analise o seguinte conteúdo com base nas seguintes entradas do usuário:\n\nConteúdo: {content}\n\nEntradas do usuário: {user_inputs}\n\nForneça uma pontuação de relevância entre 0 e 10 e uma breve descrição da relevância."
+            prompt = (
+                f"Analise o seguinte conteúdo com base nas entradas do usuário fornecidas:"
+                f"\n\nConteúdo: {content}\n\n"
+                f"Entradas do usuário:\n"
+                f"- Nome do Projeto: {user_inputs.get('projeto', 'N/A')}\n"
+                f"- Orçamento em reais (R$): {user_inputs.get('orcamento', 'N/A')}\n"
+                f"- Número de Colaboradores: {user_inputs.get('numero_colaboradores', 'N/A')}\n"
+                f"- Extensão Geográfica: {user_inputs.get('extensao', 'N/A')}\n"
+                f"- Duração do Projeto: {user_inputs.get('tempo', 'N/A')} meses\n"
+                f"- Setor: {user_inputs.get('tema', 'N/A')}\n"
+                f"- Vertente ou Subtema: {user_inputs.get('vertente', 'N/A')}\n"
+                f"- Itens Financiáveis: {user_inputs.get('itensfianciaveis', 'N/A')}\n"
+                f"- Público-Alvo do Projeto: {user_inputs.get('publicoalvo', 'N/A')}\n"
+                f"- Cotação Atual do Dólar: R$ {user_inputs.get('cotacao_dolar', 'N/A')}\n\n"
+                f"Com base nesses dados, forneça:\n"
+                f"- Uma pontuação de relevância de 0 a 10, onde 10 indica máxima adequação ao projeto e 0 irrelevância.\n"
+                f"- Uma breve justificativa explicando a adequação e como o conteúdo pode contribuir para o projeto."
+            )
             response = model.generate_content(prompt)
             return response.text
         except google_exceptions.ResourceExhausted:
@@ -206,6 +223,8 @@ def analise_page(content, inputs):
         description = "Descrição não disponível"
 
     return score, description
+
+
 
 def analise_melhor_json(melhor_conteudo, inputs):
     best_index = None
