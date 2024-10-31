@@ -14,10 +14,10 @@ def obter_cotacao_dolar():
     if response.status_code == 200:
         dados = response.json()
         cotacao = dados['USDBRL']['bid']
-        return float(cotacao)  # Retorna o valor da cotação como um número
+        return float(cotacao)
     else:
         print("Não foi possível obter a cotação do dólar.")
-        return None  # Retorna None se a cotação não puder ser obtida
+        return None
 
 # Configuração da chave da API
 api_key = 'AIzaSyCdUc8hHD_Uf6yior7ujtW5wvPYMepoh5I'  # Substitua pela sua chave de API
@@ -67,8 +67,6 @@ def lingua_valida(lingua):
     valid_languages = ['en', 'pt', 'es', 'zh-cn']
     return lingua in valid_languages
 
-# Função para obter os parâmetros do usuário com seleção de área e sub-área
-# Função para obter os parâmetros do usuário com seleção de área e sub-área
 # Função para obter os parâmetros do usuário com seleção de tema e vertente (subtema)
 def obter_parametros_usuario(lingua):
     respostas = {}
@@ -77,37 +75,29 @@ def obter_parametros_usuario(lingua):
     cotacao_dolar = obter_cotacao_dolar()
     if cotacao_dolar is None:
         print("Não foi possível obter a cotação do dólar. Usando valor padrão.")
-        cotacao_dolar = 5.00  # Valor padrão se a cotação não for obtida
+        cotacao_dolar = 5.00
 
-    perguntas = {
+    # Perguntas relacionadas à empresa
+    perguntas_empresa = {
         "nome": "Por favor, insira o nome da pessoa responsável: ",
         "nome_empresa": "Por favor, insira o nome da empresa responsável: ",
-        "numero_colaboradores": "Por favor, insira o número de colaboradores: ",
-        "projeto": "Por favor, informe o nome do projeto: ",
-        "orcamento": f"Cotação atual do dólar: R$ {cotacao_dolar:.2f} \n Qual é o orçamento previsto para o projeto em reais (R$)?",
-        "extensao": "Qual é a extensão geográfica do projeto? (Regional, Nacional, Mundial): ",
-        "tempo": "Qual é a duração prevista do projeto em meses? ",
         "lucro": f"Qual é o lucro bruto da empresa em reais (R$)?",
+        "numero_colaboradores": "Por favor, insira o número de colaboradores: ",
         "CNPJ": "Por favor, forneça o CNPJ da empresa (se não possuir, informe 'Não'): ",
-        "publicoalvo": "Quem é o público-alvo do projeto? ",
-        "itensfianciaveis": "Os itens do projeto podem ser financiados? (Sim ou Não): "
+        "Email": "Por favor, insira o e-mail do responsável pelo projeto: "
     }
 
-    vertentes = {
-        1: ["Desenvolvimento de Software", "Infraestrutura de TI", "Segurança da Informação", "Transformação Digital", "Computação em Nuvem"],
-        2: ["Manufatura", "Logística e Cadeia de Suprimentos", "Energia", "Engenharia de Produto"],
-        3: ["Construção Civil", "Urbanismo", "Saneamento Básico", "Infraestrutura de Transportes"],
-        4: ["Gestão de Resíduos", "Conservação de Recursos Naturais", "Energias Renováveis", "Sustentabilidade"],
-        5: ["Educação a Distância (EAD)", "Capacitação e Treinamento", "Desenvolvimento de Currículo", "Inovação Educacional"],
-        6: ["Infraestrutura de Saúde", "Tecnologia em Saúde (HealthTech)", "Pesquisa Biomédica", "Gestão de Saúde Pública"],
-        7: ["Finanças Corporativas", "Gestão de Ativos", "Finanças Sustentáveis", "Criptomoedas e Blockchain"],
-        8: ["Agricultura de Precisão", "Pecuária", "Agroindústria", "Desenvolvimento Rural Sustentável"],
-        9: ["Marketing Digital", "Branding e Posicionamento de Marca", "Comunicação Corporativa", "Análise de Dados de Mercado"],
-        10: ["Programas de Inclusão Social", "Empreendedorismo Social", "Direitos Humanos e Igualdade de Gênero", "Segurança Alimentar"],
-        11: ["Políticas Públicas", "Modernização Administrativa", "Transparência e Compliance", "Planejamento Urbano e Regional"],
-        12: ["Produção Audiovisual", "Artes Cênicas e Performáticas", "Indústria de Jogos", "Preservação do Patrimônio Cultural"]
-    }
+    # Perguntar os dados da empresa
+    for chave, pergunta in perguntas_empresa.items():
+        while True:
+            try:
+                resposta = input(pergunta)
+                respostas[chave] = resposta
+                break
+            except ValueError:
+                print("Por favor, insira uma resposta válida.")
 
+    # Perguntar a área de atuação da empresa
     temas = {
         1: "Tecnologia da Informação (TI)",
         2: "Indústria",
@@ -123,8 +113,43 @@ def obter_parametros_usuario(lingua):
         12: "Entretenimento e Cultura"
     }
 
-    # Perguntar o tema
-    print("Escolha o tema do projeto:")
+    print("Escolha a área de atuação da empresa:")
+    for codigo, nome in temas.items():
+        print(f"{codigo}: {nome}")
+
+    while True:
+        try:
+            escolha_area = int(input("Digite o número da área escolhida: "))
+            if escolha_area in temas:
+                respostas["area_atuacao"] = temas[escolha_area]
+                break
+            else:
+                print("Escolha um número válido para a área de atuação.")
+        except ValueError:
+            print("Por favor, insira um número válido.")
+
+    # Perguntas relacionadas ao projeto
+    perguntas_projeto = {
+        "projeto": "Por favor, informe o nome do projeto: ",
+        "orcamento": f"Cotação atual do dólar: R$ {cotacao_dolar:.2f} \nQual é o orçamento previsto para o projeto em reais (R$)?",
+        "extensao": "Qual é a extensão geográfica do projeto? (Regional, Nacional, Mundial): ",
+        "tempo": "Qual é a duração prevista do projeto em meses? ",
+        "publicoalvo": "Quem é o público-alvo do projeto? ",
+        "itensfianciaveis": "Os itens do projeto podem ser financiados? (Sim ou Não): "
+    }
+
+    # Perguntar o nome do projeto
+    for chave, pergunta in perguntas_projeto.items():
+        while True:
+            try:
+                resposta = input(pergunta)
+                respostas[chave] = resposta
+                break
+            except ValueError:
+                print("Por favor, insira uma resposta válida.")
+
+    # Perguntar o tema do projeto
+    print("\nEscolha o tema do projeto:")
     for codigo, nome in temas.items():
         print(f"{codigo}: {nome}")
 
@@ -140,6 +165,21 @@ def obter_parametros_usuario(lingua):
             print("Por favor, insira um número válido.")
 
     # Perguntar a vertente (subtema) do tema escolhido
+    vertentes = {
+        1: ["Desenvolvimento de Software", "Infraestrutura de TI", "Segurança da Informação", "Transformação Digital", "Computação em Nuvem"],
+        2: ["Manufatura", "Logística e Cadeia de Suprimentos", "Energia", "Engenharia de Produto"],
+        3: ["Construção Civil", "Urbanismo", "Saneamento Básico", "Infraestrutura de Transportes"],
+        4: ["Gestão de Resíduos", "Conservação de Recursos Naturais", "Energias Renováveis", "Sustentabilidade"],
+        5: ["Educação a Distância (EAD)", "Capacitação e Treinamento", "Desenvolvimento de Currículo", "Inovação Educacional"],
+        6: ["Infraestrutura de Saúde", "Tecnologia em Saúde (HealthTech)", "Pesquisa Biomédica", "Gestão de Saúde Pública"],
+        7: ["Finanças Corporativas", "Gestão de Ativos", "Finanças Sustentáveis", "Criptomoedas e Blockchain"],
+        8: ["Agricultura de Precisão", "Pecuária", "Agroindústria", "Desenvolvimento Rural Sustentável"],
+        9: ["Marketing Digital", "Branding e Posicionamento de Marca", "Comunicação Corporativa", "Análise de Dados de Mercado"],
+        10: ["Programas de Inclusão Social", "Empreendedorismo Social", "Direitos Humanos e Igualdade de Gênero", "Segurança Alimentar"],
+        11: ["Políticas Públicas", "Modernização Administrativa", "Transparência e Compliance", "Planejamento Urbano e Regional"],
+        12: ["Produção Audiovisual", "Artes Cênicas e Performáticas", "Indústria de Jogos", "Preservação do Patrimônio Cultural"]
+    }
+
     print(f"\nVocê escolheu o tema '{temas[escolha_tema]}'. Agora escolha uma vertente (subtema):")
     for i, vertente in enumerate(vertentes[escolha_tema], 1):
         print(f"{i}. {vertente}")
@@ -154,21 +194,6 @@ def obter_parametros_usuario(lingua):
                 print(f"Escolha um número entre 1 e {len(vertentes[escolha_tema])}.")
         except ValueError:
             print("Por favor, insira um número válido.")
-
-    # Continuar com as demais perguntas
-    while True:
-        try:
-            numero_colaboradores = int(input(perguntas["numero_colaboradores"]))
-            respostas["numero_colaboradores"] = numero_colaboradores
-            break
-        except ValueError:
-            print("Por favor, insira um número inteiro válido para o número de colaboradores.")
-
-        # Continuar com as demais perguntas
-    for chave, pergunta_original in perguntas.items():
-        if chave not in respostas:  # Para evitar sobrescrever as respostas já fornecidas
-            resposta = input(f"{pergunta_original}")
-            respostas[chave] = resposta
 
     return respostas
 
@@ -224,14 +249,11 @@ def analise_page(content, inputs):
 
     return score, description
 
-
-
 def analise_melhor_json(melhor_conteudo, inputs):
     best_index = None
     best_score = 0
     best_url = None
 
-    # Contar o número de índices no JSON
     num_indices = len(melhor_conteudo)
     print(f"Número de índices presentes no JSON: {num_indices}")
 
@@ -245,7 +267,7 @@ def analise_melhor_json(melhor_conteudo, inputs):
             best_index = index
             best_url = item.get('url', 'URL não encontrada') if isinstance(item, dict) else 'URL não encontrada'
 
-        time.sleep(1)  # Pequeno delay entre as análises de indexes
+        time.sleep(1)
 
     return best_index, best_score, best_url
 
@@ -273,21 +295,20 @@ def recomenda_investimento(conteudos, inputs):
             best_option = arquivo
             best_content = content
 
-        time.sleep(1.6)  # Pequeno delay entre as chamadas para evitar sobrecarga
+        time.sleep(1.6)
 
     return best_option, best_score, best_content
 
 def main():
-    pasta_dados = './DADOS'  # Nome da pasta contendo os arquivos JSON
+    pasta_dados = './DADOS'
 
-    # Verifica se a pasta existe
     if not os.path.exists(pasta_dados):
         print(f"A pasta '{pasta_dados}' não foi encontrada. Certifique-se de que ela existe e contém arquivos JSON.")
         return
 
     dados_paginas = carregar_conteudo(pasta_dados)
 
-    lingua = escolher_idioma()  # Usa a função que já retorna o código do idioma
+    lingua = escolher_idioma()
 
     if not lingua_valida(lingua):
         print("Língua inválida. Por favor, use uma das seguintes: 'en', 'pt', 'es', 'zh-cn'.")
