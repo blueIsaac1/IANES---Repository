@@ -5,7 +5,7 @@ import time
 from google.api_core import exceptions as google_exceptions
 from googletrans import Translator
 import requests
-
+import re
 # Função para obter a cotação do dólar
 def obter_cotacao_dolar():
     url = 'https://economia.awesomeapi.com.br/json/last/USD-BRL'
@@ -14,10 +14,10 @@ def obter_cotacao_dolar():
     if response.status_code == 200:
         dados = response.json()
         cotacao = dados['USDBRL']['bid']
-        return float(cotacao)
+        return float(cotacao)  # Retorna o valor da cotação como um número
     else:
         print("Não foi possível obter a cotação do dólar.")
-        return None
+        return None  # Retorna None se a cotação não puder ser obtida
 
 # Configuração da chave da API
 api_key = 'AIzaSyCdUc8hHD_Uf6yior7ujtW5wvPYMepoh5I'  # Substitua pela sua chave de API
@@ -67,6 +67,8 @@ def lingua_valida(lingua):
     valid_languages = ['en', 'pt', 'es', 'zh-cn']
     return lingua in valid_languages
 
+#e Função para obter os parâmetros do usuário com seleção de área e sub-área
+# Função para obter os parâmetros do usuário com seleção de área e sub-área
 # Função para obter os parâmetros do usuário com seleção de tema e vertente (subtema)
 def obter_parametros_usuario(lingua):
     respostas = {}
@@ -75,96 +77,22 @@ def obter_parametros_usuario(lingua):
     cotacao_dolar = obter_cotacao_dolar()
     if cotacao_dolar is None:
         print("Não foi possível obter a cotação do dólar. Usando valor padrão.")
-        cotacao_dolar = 5.00
+        cotacao_dolar = 5.00  # Valor padrão se a cotação não for obtida
 
-    # Perguntas relacionadas à empresa
-    perguntas_empresa = {
+    perguntas = {
         "nome": "Por favor, insira o nome da pessoa responsável: ",
         "nome_empresa": "Por favor, insira o nome da empresa responsável: ",
-        "lucro": f"Qual é o lucro bruto da empresa em reais (R$)?",
         "numero_colaboradores": "Por favor, insira o número de colaboradores: ",
-        "CNPJ": "Por favor, forneça o CNPJ da empresa (se não possuir, informe 'Não'): ",
-        "Email": "Por favor, insira o e-mail do responsável pelo projeto: "
-    }
-
-    # Perguntar os dados da empresa
-    for chave, pergunta in perguntas_empresa.items():
-        while True:
-            try:
-                resposta = input(pergunta)
-                respostas[chave] = resposta
-                break
-            except ValueError:
-                print("Por favor, insira uma resposta válida.")
-
-    # Perguntar a área de atuação da empresa
-    temas = {
-        1: "Tecnologia da Informação (TI)",
-        2: "Indústria",
-        3: "Engenharia Civil e Infraestrutura",
-        4: "Meio Ambiente",
-        5: "Educação",
-        6: "Saúde",
-        7: "Finanças e Investimentos",
-        8: "Agropecuária e Agroindústria",
-        9: "Marketing e Comunicação",
-        10: "Desenvolvimento Social e Humano",
-        11: "Setor Público e Governança",
-        12: "Entretenimento e Cultura"
-    }
-
-    print("Escolha a área de atuação da empresa:")
-    for codigo, nome in temas.items():
-        print(f"{codigo}: {nome}")
-
-    while True:
-        try:
-            escolha_area = int(input("Digite o número da área escolhida: "))
-            if escolha_area in temas:
-                respostas["area_atuacao"] = temas[escolha_area]
-                break
-            else:
-                print("Escolha um número válido para a área de atuação.")
-        except ValueError:
-            print("Por favor, insira um número válido.")
-
-    # Perguntas relacionadas ao projeto
-    perguntas_projeto = {
         "projeto": "Por favor, informe o nome do projeto: ",
-        "orcamento": f"Cotação atual do dólar: R$ {cotacao_dolar:.2f} \nQual é o orçamento previsto para o projeto em reais (R$)?",
+        "orcamento": f"Cotação atual do dólar: R$ {cotacao_dolar:.2f} \n Qual é o orçamento previsto para o projeto em reais (R$)?",
         "extensao": "Qual é a extensão geográfica do projeto? (Regional, Nacional, Mundial): ",
         "tempo": "Qual é a duração prevista do projeto em meses? ",
+        "lucro": f"Qual é o lucro bruto da empresa em reais (R$)?",
+        "CNPJ": "Por favor, forneça o CNPJ da empresa (se não possuir, informe 'Não'): ",
         "publicoalvo": "Quem é o público-alvo do projeto? ",
         "itensfianciaveis": "Os itens do projeto podem ser financiados? (Sim ou Não): "
     }
 
-    # Perguntar o nome do projeto
-    for chave, pergunta in perguntas_projeto.items():
-        while True:
-            try:
-                resposta = input(pergunta)
-                respostas[chave] = resposta
-                break
-            except ValueError:
-                print("Por favor, insira uma resposta válida.")
-
-    # Perguntar o tema do projeto
-    print("\nEscolha o tema do projeto:")
-    for codigo, nome in temas.items():
-        print(f"{codigo}: {nome}")
-
-    while True:
-        try:
-            escolha_tema = int(input("Digite o número do tema escolhido: "))
-            if escolha_tema in temas:
-                respostas["tema"] = temas[escolha_tema]
-                break
-            else:
-                print("Escolha um número válido para o tema.")
-        except ValueError:
-            print("Por favor, insira um número válido.")
-
-    # Perguntar a vertente (subtema) do tema escolhido
     vertentes = {
         1: ["Desenvolvimento de Software", "Infraestrutura de TI", "Segurança da Informação", "Transformação Digital", "Computação em Nuvem"],
         2: ["Manufatura", "Logística e Cadeia de Suprimentos", "Energia", "Engenharia de Produto"],
@@ -180,6 +108,38 @@ def obter_parametros_usuario(lingua):
         12: ["Produção Audiovisual", "Artes Cênicas e Performáticas", "Indústria de Jogos", "Preservação do Patrimônio Cultural"]
     }
 
+    temas = {
+        1: "Tecnologia da Informação (TI)",
+        2: "Indústria",
+        3: "Engenharia Civil e Infraestrutura",
+        4: "Meio Ambiente",
+        5: "Educação",
+        6: "Saúde",
+        7: "Finanças e Investimentos",
+        8: "Agropecuária e Agroindústria",
+        9: "Marketing e Comunicação",
+        10: "Desenvolvimento Social e Humano",
+        11: "Setor Público e Governança",
+        12: "Entretenimento e Cultura"
+    }
+
+    # Perguntar o tema
+    print("Escolha o tema do projeto:")
+    for codigo, nome in temas.items():
+        print(f"{codigo}: {nome}")
+
+    while True:
+        try:
+            escolha_tema = int(input("Digite o número do tema escolhido: "))
+            if escolha_tema in temas:
+                respostas["tema"] = temas[escolha_tema]
+                break
+            else:
+                print("Escolha um número válido para o tema.")
+        except ValueError:
+            print("Por favor, insira um número válido.")
+
+    # Perguntar a vertente (subtema) do tema escolhido
     print(f"\nVocê escolheu o tema '{temas[escolha_tema]}'. Agora escolha uma vertente (subtema):")
     for i, vertente in enumerate(vertentes[escolha_tema], 1):
         print(f"{i}. {vertente}")
@@ -195,6 +155,21 @@ def obter_parametros_usuario(lingua):
         except ValueError:
             print("Por favor, insira um número válido.")
 
+    # Continuar com as demais perguntas
+    while True:
+        try:
+            numero_colaboradores = int(input(perguntas["numero_colaboradores"]))
+            respostas["numero_colaboradores"] = numero_colaboradores
+            break
+        except ValueError:
+            print("Por favor, insira um número inteiro válido para o número de colaboradores.")
+
+        # Continuar com as demais perguntas
+    for chave, pergunta_original in perguntas.items():
+        if chave not in respostas:  # Para evitar sobrescrever as respostas já fornecidas
+            resposta = input(f"{pergunta_original}")
+            respostas[chave] = resposta
+
     return respostas
 
 
@@ -205,23 +180,38 @@ def get_gemini_analysis_with_retry(content, user_inputs, max_retries=5, initial_
         try:
             model = genai.GenerativeModel("gemini-1.5-flash")
             prompt = (
-                f"Analise o seguinte conteúdo com base nas entradas do usuário fornecidas:"
-                f"\n\nConteúdo: {content}\n\n"
-                f"Entradas do usuário:\n"
+                f"Você é uma I.A responsável por analisar a adequação do conteúdo abaixo com base nos dados fornecidos pelo usuário para um projeto específico. "
+                f"Leve em consideração as informações detalhadas a seguir e atribua uma pontuação de relevância de 0 a 10, onde 10 indica máxima adequação ao projeto. "
+                f"Em seguida, forneça uma justificativa explicativa que aborde os pontos centrais de adequação ou limitação do conteúdo em relação ao projeto.\n\n"
+
+                f"Conteúdo a ser analisado:\n{content}\n\n"
+
+                f"Detalhes do Projeto do Usuário:\n"
                 f"- Nome do Projeto: {user_inputs.get('projeto', 'N/A')}\n"
-                f"- Orçamento em reais (R$): {user_inputs.get('orcamento', 'N/A')}\n"
-                f"- Número de Colaboradores: {user_inputs.get('numero_colaboradores', 'N/A')}\n"
-                f"- Extensão Geográfica: {user_inputs.get('extensao', 'N/A')}\n"
-                f"- Duração do Projeto: {user_inputs.get('tempo', 'N/A')} meses\n"
-                f"- Setor: {user_inputs.get('tema', 'N/A')}\n"
-                f"- Vertente ou Subtema: {user_inputs.get('vertente', 'N/A')}\n"
-                f"- Itens Financiáveis: {user_inputs.get('itensfianciaveis', 'N/A')}\n"
-                f"- Público-Alvo do Projeto: {user_inputs.get('publicoalvo', 'N/A')}\n"
-                f"- Cotação Atual do Dólar: R$ {user_inputs.get('cotacao_dolar', 'N/A')}\n\n"
-                f"Com base nesses dados, forneça:\n"
-                f"- Uma pontuação de relevância de 0 a 10, onde 10 indica máxima adequação ao projeto e 0 irrelevância.\n"
-                f"- Uma breve justificativa explicando a adequação e como o conteúdo pode contribuir para o projeto."
+                f"- Orçamento previsto para o projeto (em R$): {user_inputs.get('orcamento', 'N/A')}\n"
+                f"- Cotação atual do dólar (em R$): {user_inputs.get('cotacao_dolar', 'N/A')}\n"
+                f"- Número de Colaboradores Envolvidos: {user_inputs.get('numero_colaboradores', 'N/A')}\n"
+                f"- Escala Geográfica (Regional, Nacional, Mundial): {user_inputs.get('extensao', 'N/A')}\n"
+                f"- Duração do Projeto (em meses): {user_inputs.get('tempo', 'N/A')}\n\n"
+
+                f"Setor e Vertente do Projeto:\n"
+                f"- Setor Principal: {user_inputs.get('tema', 'N/A')}\n"
+                f"- Subsetor/Vertente Específica: {user_inputs.get('vertente', 'N/A')}\n\n"
+
+                f"Critérios de Financiamento e Público-Alvo:\n"
+                f"- Financiamento dos Itens do Projeto: {user_inputs.get('itensfinanciaveis', 'N/A')}\n"
+                f"- Público-Alvo Específico: {user_inputs.get('publicoalvo', 'N/A')}\n\n"
+
+                f"Solicitação de Análise:\n"
+                f"1. Analise a relevância deste conteúdo para o projeto considerando os setores e vertentes envolvidos.\n"
+                f"2. Avalie o conteúdo quanto à sua contribuição potencial para o alcance dos objetivos orçamentários e de impacto especificados.\n"
+                f"3. Considere se o conteúdo atende à escala geográfica e à complexidade do projeto.\n\n"
+                
+                f"Responda no seguinte formato:\n"
+                f"Pontuação de Relevância: [X/10]\n"
+                f"Justificativa:\n- Descreva por que o conteúdo é adequado ou não para o projeto, com base nos pontos específicos fornecidos."
             )
+
             response = model.generate_content(prompt)
             return response.text
         except google_exceptions.ResourceExhausted:
@@ -235,13 +225,27 @@ def get_gemini_analysis_with_retry(content, user_inputs, max_retries=5, initial_
             print(f"Erro inesperado: {e}")
             return "0\nErro na análise."
 
+
 def analise_page(content, inputs):
     analysis = get_gemini_analysis_with_retry(content, inputs)
 
     try:
+        # Dividir o conteúdo retornado em linhas e processar cada linha
         analysis_lines = analysis.split('\n')
-        score = float(analysis_lines[0].split(':')[1].strip()) if ':' in analysis_lines[0] else float(analysis_lines[0])
-        description = analysis_lines[1].strip()
+
+        # Usar regex para extrair um número depois da palavra 'pontuação' ou 'relevância'
+        score_match = re.search(r'(pontuação|relevância)\s*:\s*(\d+(\.\d+)?)', analysis, re.IGNORECASE)
+
+        if score_match:
+            # Se um número for encontrado, converta para float
+            score = float(score_match.group(2))  # O grupo 2 contém o valor numérico encontrado
+        else:
+            print(f"Score inválido recebido: '{analysis_lines[0]}'. Definindo score como 0.")
+            score = 0  # Define score como 0 caso não seja um valor válido
+
+        # Tentar obter a descrição
+        description = analysis_lines[1].strip() if len(analysis_lines) > 1 else "Descrição não disponível"
+
     except Exception as e:
         print(f"Erro ao processar a análise: {e}")
         score = 0
@@ -249,11 +253,13 @@ def analise_page(content, inputs):
 
     return score, description
 
+
 def analise_melhor_json(melhor_conteudo, inputs):
     best_index = None
     best_score = 0
     best_url = None
 
+    # Contar o número de índices no JSON
     num_indices = len(melhor_conteudo)
     print(f"Número de índices presentes no JSON: {num_indices}")
 
@@ -267,7 +273,7 @@ def analise_melhor_json(melhor_conteudo, inputs):
             best_index = index
             best_url = item.get('url', 'URL não encontrada') if isinstance(item, dict) else 'URL não encontrada'
 
-        time.sleep(1)
+        time.sleep(1)  # Pequeno delay entre as análises de indexes
 
     return best_index, best_score, best_url
 
@@ -295,20 +301,21 @@ def recomenda_investimento(conteudos, inputs):
             best_option = arquivo
             best_content = content
 
-        time.sleep(1.6)
+        time.sleep(1.6)  # Pequeno delay entre as chamadas para evitar sobrecarga
 
     return best_option, best_score, best_content
 
 def main():
-    pasta_dados = './DADOS'
+    pasta_dados = './DADOS'  # Nome da pasta contendo os arquivos JSON
 
+    # Verifica se a pasta existe
     if not os.path.exists(pasta_dados):
         print(f"A pasta '{pasta_dados}' não foi encontrada. Certifique-se de que ela existe e contém arquivos JSON.")
         return
 
     dados_paginas = carregar_conteudo(pasta_dados)
 
-    lingua = escolher_idioma()
+    lingua = escolher_idioma()  # Usa a função que já retorna o código do idioma
 
     if not lingua_valida(lingua):
         print("Língua inválida. Por favor, use uma das seguintes: 'en', 'pt', 'es', 'zh-cn'.")
